@@ -228,6 +228,62 @@ echo "[info] Installing Argo CD..."
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
+# Optionally set Argo CD admin password if ARGOCD_ADMIN_PASSWORD is provided
+if [[ -n "${ARGOCD_ADMIN_PASSWORD:-}" ]]; then
+  echo "[info] ARGOCD_ADMIN_PASSWORD provided: attempting to set Argo CD admin password"
+  # Wait for argocd-server to be ready to accept connections
+  kubectl -n argocd rollout status deploy/argocd-server --timeout=180s || true
+
+  if command -v argocd >/dev/null 2>&1; then
+    echo "[info] Using argocd CLI to update admin password"
+    # Port-forward server in background
+    kubectl -n argocd port-forward svc/argocd-server 8080:80 >/dev/null 2>&1 &
+    PF_PID=$!
+    # Ensure we clean up port-forward on exit
+    cleanup_pf() { kill "$PF_PID" >/dev/null 2>&1 || true; }
+    trap cleanup_pf EXIT
+    # Give it a moment to bind
+    sleep 4
+
+    INITIAL_PW=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d || true)
+    if [[ -z "$INITIAL_PW" ]]; then
+      echo "[warn] Could not retrieve initial admin password; continuing but argocd CLI login may fail"
+    fi
+
+    # Try grpc-web first (works via port-forward to HTTP 80)
+    if ! argocd login localhost:8080 --username admin --password "$INITIAL_PW" --insecure --grpc-web >/dev/null 2>&1; then
+      # Fallback without grpc-web
+      argocd login localhost:8080 --username admin --password "$INITIAL_PW" --insecure >/dev/null 2>&1 || true
+    fi
+
+    if argocd account update-password --account admin --current-password "$INITIAL_PW" --new-password "$ARGOCD_ADMIN_PASSWORD" >/dev/null 2>&1; then
+      echo "[done] Argo CD admin password updated via argocd CLI"
+    else
+      echo "[warn] argocd CLI password update failed. You may need to retry after Argo CD is fully ready."
+    fi
+
+    # Cleanup port-forward
+    cleanup_pf
+    trap - EXIT
+  else
+    echo "[warn] argocd CLI not found. Attempting to patch secret directly (requires htpasswd)."
+    if command -v htpasswd >/dev/null 2>&1; then
+      # Generate bcrypt hash with cost 10 (compatible with Argo CD)
+      BCRYPT=$(htpasswd -nbBC 10 admin "$ARGOCD_ADMIN_PASSWORD" | cut -d: -f2)
+      NOW=$(date -u +%FT%TZ)
+      kubectl -n argocd patch secret argocd-secret \
+        --type merge \
+        -p "{\"stringData\": {\"admin.password\": \"$BCRYPT\", \"admin.passwordMtime\": \"$NOW\"}}" || echo "[warn] Failed to patch argocd-secret"
+      echo "[done] Attempted to update Argo CD admin password via secret patch"
+    else
+      cat <<EOF
+[error] Neither argocd CLI nor htpasswd found.
+Install argocd CLI (https://argo-cd.readthedocs.io/) or htpasswd (apache2-utils) and rerun with ARGOCD_ADMIN_PASSWORD set.
+EOF
+    fi
+  fi
+fi
+
 # Apply sample app if present (for students' quick validation)
 if [[ -f argocd/application-sample.yaml ]]; then
   echo "[info] Applying Argo CD Sample Application (argocd/application-sample.yaml)"

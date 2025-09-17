@@ -28,7 +28,9 @@ NODE_ROLE_ARN=arn:aws:iam::<ACCOUNT_ID>:role/LabRole
 ## 2) Provisionar EKS + Argo CD (CloudFormation)
 ```bash
 chmod +x scripts/deploy-cfn.sh scripts/destroy-cfn.sh
-ENV_FILE=env/cfn.fiapaws scripts/deploy-cfn.sh
+# (Opcional) Defina a senha do admin do Argo CD durante o deploy
+# Exemplo: ARGOCD_ADMIN_PASSWORD='Fiap@2025!' 
+ENV_FILE=env/cfn.fiapaws ARGOCD_ADMIN_PASSWORD='Fiap@2025!' scripts/deploy-cfn.sh
 ```
 Verifique:
 ```bash
@@ -79,6 +81,17 @@ Aplicar se usar arquivo:
 ```bash
 kubectl apply -f argocd/your-app.yaml
 kubectl -n argocd get applications
+```
+
+Login na UI do Argo CD (opcional):
+```bash
+# Encaminhar porta da UI
+kubectl -n argocd port-forward svc/argocd-server 8080:80
+
+# Usuário: admin
+# Senha: se você definiu ARGOCD_ADMIN_PASSWORD, use-a (ex.: Fiap@2025!)
+# Caso contrário, senha inicial:
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
 ```
 
 ## 5) Pipeline (primeiro deploy)

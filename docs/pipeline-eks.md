@@ -65,6 +65,12 @@ kubectl -n argocd port-forward svc/argocd-server 8080:80
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
 ```
 
+Você pode definir a senha do admin durante o provisionamento, passando `ARGOCD_ADMIN_PASSWORD` ao script:
+```bash
+ENV_FILE=env/cfn.fiapaws ARGOCD_ADMIN_PASSWORD='Fiap@2025!' scripts/deploy-cfn.sh
+```
+Se o `argocd` CLI não estiver instalado, o script tenta atualizar a senha via `htpasswd` (bcrypt) como fallback.
+
 ## 4) Passo manual: criar sua Application no Argo CD
 Você pode criar via UI do Argo CD (Create Application) ou aplicar um YAML. Exemplo de YAML mínimo (ajuste o `repoURL` para o seu GitHub):
 ```yaml
