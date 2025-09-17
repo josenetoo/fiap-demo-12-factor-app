@@ -1,6 +1,6 @@
 image:
   repository: docker.io/testassd/demo-12-factor-app #REPLACE_ME_YOUR_DOCKERHUB_USERNAME
-  tag: "sha-4ff4e8cf6746508f70f72c48a8b32e9d1e8c8814" # managed-by-ci
+  tag: "sha-01d3e7790d891a182947308a403301279f0717f1" # managed-by-ci
   pullPolicy: IfNotPresent
 replicaCount: 1
 service:
