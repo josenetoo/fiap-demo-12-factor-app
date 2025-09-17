@@ -1,5 +1,5 @@
 image:
-  repository: docker.io/josenetoo98/demo-12-factor-app #REPLACE_ME_YOUR_DOCKERHUB_USERNAME
+  repository: docker.io/testassd/demo-12-factor-app #REPLACE_ME_YOUR_DOCKERHUB_USERNAME
   tag: "sha-0adea497f05e87b4e4e58b37d95eea1e403132c6" # managed-by-ci
   pullPolicy: IfNotPresent
 replicaCount: 1
