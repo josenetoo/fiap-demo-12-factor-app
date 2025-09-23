@@ -26,7 +26,7 @@ app.get('/healthz', (_req, res) => {
 
 // Basic routes
 app.get('/', (_req, res) => {
-  res.json({ app: APP_NAME, message: 'Welcome to the 12-Factor demo app FIAP - New Version' });
+  res.json({ app: APP_NAME, message: 'Welcome to the 12-Factor demo app FIAP - New Version!! Agora vaiii!' });
 });
 
 app.get('/quotes', (_req, res) => {
