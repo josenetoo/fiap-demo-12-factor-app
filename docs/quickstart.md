@@ -112,6 +112,14 @@ curl http://<EXTERNAL-HOSTNAME>/healthz
 ENV_FILE=env/cfn.fiapaws scripts/destroy-cfn.sh
 ```
 
+**Limpeza automática**: O script remove automaticamente:
+- Todas as Applications do Argo CD (e seus recursos gerenciados)
+- Services do tipo LoadBalancer (NLBs da AWS)
+- Namespaces de aplicação
+- Stacks do CloudFormation (nodegroup → cluster)
+
+Isso evita recursos órfãos e custos extras no Learner Lab.
+
 ## Observações
 - Sem banco de dados por padrão; app está stateless.
 - Sem Ingress/ALB neste momento; quando quiser evoluir para ALB (camada 7), instale o AWS Load Balancer Controller e adicione um Ingress.

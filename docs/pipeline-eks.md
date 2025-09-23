@@ -161,6 +161,20 @@ curl http://<EXTERNAL-HOSTNAME>/healthz
 - [ ] Pipeline gerando `image.tag=sha-<commit>` e Argo CD sincronizando
 - [ ] `curl /healthz` responde OK no hostname do NLB
 
+## Teardown (economia de orçamento)
+```bash
+ENV_FILE=env/cfn.fiapaws scripts/destroy-cfn.sh
+```
+
+**Limpeza inteligente**: O script automaticamente:
+1. Remove todas as Applications do Argo CD (limpando recursos gerenciados)
+2. Deleta Services LoadBalancer restantes (evita NLBs órfãos)
+3. Aguarda a AWS processar a remoção dos Load Balancers
+4. Remove namespaces de aplicação
+5. Deleta stacks CloudFormation (nodegroup → cluster)
+
+Isso garante que nenhum recurso AWS fique rodando após o teardown, evitando custos desnecessários no Learner Lab.
+
 ## Fontes Verificadas
 - Argo CD (Application): https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/
 - Kubernetes (Deployments/Probes/ConfigMaps/Secrets): https://kubernetes.io/docs/

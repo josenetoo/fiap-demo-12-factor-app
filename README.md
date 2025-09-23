@@ -95,6 +95,7 @@ curl http://<EXTERNAL-HOSTNAME>/healthz
 ```bash
 scripts/destroy-cfn.sh
 ```
+**Nota**: O script limpa automaticamente Applications do Argo CD e Services LoadBalancer antes de remover o cluster, evitando recursos órfãos na AWS.
 
 ## CI: GitHub Actions + Docker Hub
 
